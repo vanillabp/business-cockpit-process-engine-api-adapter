@@ -672,7 +672,7 @@ public class PeaCockpitBridge implements BusinessCockpitBpmsBridge {
                 until the application completes it, a user task no @WorkflowTask method of this \
                 application claims was never written down, and the note of a start is kept for \
                 vanillabp.delivery.workflow-start-retention; see \
-                GAPS.md of businesscockpit-process-engine-api-adapter. Nothing about this case \
+                GAPS.md of business-cockpit-process-engine-api-adapter. Nothing about this case \
                 reaches the cockpit until the engine delivers a user task of it to this node \
                 again.""",
             adapterId,

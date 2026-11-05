@@ -17,7 +17,7 @@
   <packaging>pom</packaging>
   <name>VanillaBP Business Cockpit adapter for the Process-Engine-API</name>
   <description>Business Cockpit integration for the bpm-crafters Process-Engine-API, built as a VanillaBP 2 extension.</description>
-  <url>https://github.com/vanillabp/businesscockpit-process-engine-api-adapter</url>
+  <url>https://github.com/vanillabp/business-cockpit-process-engine-api-adapter</url>
 
   <modules>
     <module>core</module>
@@ -29,9 +29,9 @@
   </modules>
 
   <scm>
-    <connection>scm:git:https://github.com/vanillabp/businesscockpit-process-engine-api-adapter.git</connection>
-    <developerConnection>scm:git:https://github.com/vanillabp/businesscockpit-process-engine-api-adapter.git</developerConnection>
-    <url>https://github.com/vanillabp/businesscockpit-process-engine-api-adapter/tree/main</url>
+    <connection>scm:git:https://github.com/vanillabp/business-cockpit-process-engine-api-adapter.git</connection>
+    <developerConnection>scm:git:https://github.com/vanillabp/business-cockpit-process-engine-api-adapter.git</developerConnection>
+    <url>https://github.com/vanillabp/business-cockpit-process-engine-api-adapter/tree/main</url>
   </scm>
 
   <properties>
