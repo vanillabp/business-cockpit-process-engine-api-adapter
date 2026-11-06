@@ -29,7 +29,7 @@ concurrency:
   # The publish keeps its own group, so a release and a publish run beside each other.
   # They cannot write the same thing. Both upload through the profile 'central-portal',
   # but a release writes fixed versions and the publish of main writes the snapshot.
-  group: businesscockpit-process-engine-api-adapter-release
+  group: business-cockpit-process-engine-api-adapter-release
   cancel-in-progress: false
 permissions:
   contents: write

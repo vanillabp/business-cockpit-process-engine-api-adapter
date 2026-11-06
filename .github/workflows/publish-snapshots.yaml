@@ -21,7 +21,7 @@ concurrency:
   # publish: both upload through the profile 'central-portal', but a release writes fixed
   # versions and this workflow writes the snapshot, so they never write the same
   # coordinates.
-  group: businesscockpit-process-engine-api-adapter-publish
+  group: business-cockpit-process-engine-api-adapter-publish
   cancel-in-progress: false
 permissions:
   contents: read
