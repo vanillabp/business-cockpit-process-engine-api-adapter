@@ -71,12 +71,10 @@ jobs:
             -DnewVersion=${{ github.event.inputs.release_version }}
           find . -name pom.xml.versionsBackup -delete
       # a release must not depend on anything that can still change under it
-      - name: No SNAPSHOT dependency is left
+      - name: No SNAPSHOT is left
         run: |
-          if grep -R "SNAPSHOT" --include=pom.xml . ; then
-            echo "::error::A SNAPSHOT dependency is left in the release."
-            exit 1
-          fi
+          curl -fsSL -o "$RUNNER_TEMP/release-versions.sh" "https://raw.githubusercontent.com/vanillabp/maven-release-parent/e6c840c50e2ed95412710828df00fa194924edf6/.github/scripts/release-versions.sh"
+          bash "$RUNNER_TEMP/release-versions.sh" no-snapshots
       # A release train builds the bundle of each release and keeps it as an Actions artifact.
       # release-train.yaml in maven-release-parent uploads the bundles of all repositories of
       # a train as one deployment, because Sonatype allows only a few deployments a month.
