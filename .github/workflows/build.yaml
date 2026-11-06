@@ -18,7 +18,7 @@ concurrency:
   # pull request, and there the newest commit keeps its run. Sharing the group with the
   # publish workflow was never needed for this build: it runs 'install' and uploads
   # nothing, so it can neither overwrite a snapshot nor be overwritten by one.
-  group: businesscockpit-process-engine-api-adapter-pr-build-${{ github.ref }}
+  group: business-cockpit-process-engine-api-adapter-pr-build-${{ github.ref }}
   cancel-in-progress: false
 permissions:
   contents: read
