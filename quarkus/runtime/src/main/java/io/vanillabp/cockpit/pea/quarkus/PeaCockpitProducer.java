@@ -1,17 +1,17 @@
 package io.vanillabp.cockpit.pea.quarkus;
 
 import java.util.List;
+import java.util.Objects;
 
 import io.quarkus.arc.Unremovable;
 import io.quarkus.runtime.StartupEvent;
-import io.vanillabp.cockpit.extension.config.CockpitSettings;
 import io.vanillabp.cockpit.extension.spi.BusinessCockpitBpmsBridge;
 import io.vanillabp.cockpit.extension.spi.BusinessCockpitEventPublisher;
 import io.vanillabp.cockpit.pea.PeaBusinessCases;
 import io.vanillabp.cockpit.pea.PeaCockpitBridge;
 import io.vanillabp.cockpit.pea.PeaCockpitObserver;
 import io.vanillabp.cockpit.pea.PeaCockpitSettings;
-import io.vanillabp.cockpit.pea.PeaDeliveredUserTasks;
+import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.cockpit.pea.PeaProcessVersions;
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
 import io.vanillabp.integration.adapter.migration.config.MigrationAdapterProperties;
@@ -49,37 +49,43 @@ public class PeaCockpitProducer {
   /**
    * Reads this half's setting while the application starts.
    * <p>
-   * A CDI producer runs when somebody first asks for what it produces. For the memory of the
+   * A CDI producer runs when somebody first asks for what it produces. For the memories of the
    * deliveries that is the first delivered user task, which may be a working day later and comes
-   * in on the engine's own thread. So the value is read here as well, where a number nobody can
-   * use ends the boot the way it does on Spring Boot.
+   * in on the engine's own thread. So the values are read here as well, where a number nobody
+   * can use ends the boot the way it does on Spring Boot.
    *
    * @param startup Quarkus' own signal that the application is starting
-   * @param settings What the application wrote below the cockpit's own sections
+   * @param deliveredUserTasks The memories, built from the configured values
    */
   void readTheSettingsWhileTheApplicationStarts(
       @Observes final StartupEvent startup,
-      final CockpitSettings settings) {
+      final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks) {
 
-    PeaCockpitSettings.rememberedUserTasks(settings);
+    // a singleton is built when it is injected, and building it reads and checks the values
+    Objects.requireNonNull(deliveredUserTasks, "deliveredUserTasks");
 
   }
 
   /**
-   * The memory of what a delivered user task said, sized by the application. The configured
-   * value is read while the application starts, so a number nobody can use is a message on the
-   * first boot.
+   * The memories of what a delivered user task said, one for each adapter id of this BPMS, each
+   * sized by the application. A value at a level where nobody reads it is refused by the
+   * cockpit's neutral half, see {@code PeaCockpitKeys}.
    *
-   * @param settings What the application wrote below the cockpit's own sections
-   * @return The memory
+   * @param overlay What the application wrote below the adapter ids
+   * @param properties VanillaBP's resolved configuration, which names the adapter ids of this
+   *          BPMS
+   * @return The memories
    */
   @Produces
   @Singleton
   @Unremovable
-  public PeaDeliveredUserTasks businessCockpitPeaDeliveredUserTasks(
-      final CockpitSettings settings) {
+  public PeaDeliveredUserTasksOfEachAdapter businessCockpitPeaDeliveredUserTasks(
+      final PeaCockpitOverlayProperties overlay,
+      final MigrationAdapterProperties properties) {
 
-    return new PeaDeliveredUserTasks(PeaCockpitSettings.rememberedUserTasks(settings));
+    return new PeaDeliveredUserTasksOfEachAdapter(
+        PeaCockpitSettings
+            .rememberedUserTasks(overlay.rememberedUserTasks(), properties.adapterIdsOfType(PeaAdapter.ADAPTER_TYPE)));
 
   }
 
@@ -130,7 +136,7 @@ public class PeaCockpitProducer {
    *          the name of a process and the BPMN element behind a form reference come from
    * @param workflowTaskWiring VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
    *          claims a BPMN process, which is what decides whether a delivery is reported
-   * @param deliveredUserTasks The memory of what a delivery said
+   * @param deliveredUserTasks The memories of what a delivery said, one for each adapter id
    * @param versions The versions of the deployed processes
    * @param publisher Where an observed event is reported, resolved on the first event rather
    *          than now
@@ -144,7 +150,7 @@ public class PeaCockpitProducer {
   public PeaCockpitObserver businessCockpitPeaUserTaskObserver(
       final PeaDeployedProcessesRegistry registry,
       final WorkflowTaskWiring workflowTaskWiring,
-      final PeaDeliveredUserTasks deliveredUserTasks,
+      final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaProcessVersions versions,
       final Instance<BusinessCockpitEventPublisher> publisher,
       final ExtensionHandlers handlers,
@@ -172,9 +178,8 @@ public class PeaCockpitProducer {
    * single adapter dependency.
    *
    * @param properties VanillaBP's resolved configuration, which names the configured adapters
-   * @param settings What the application wrote below the cockpit's own sections
    * @param registry What the Process-Engine-API adapter recorded while deploying
-   * @param deliveredUserTasks The memory of what a delivery said
+   * @param deliveredUserTasks The memories of what a delivery said, one for each adapter id
    * @param recordedUserTasks What VanillaBP wrote down about the deliveries it processed
    * @param versions The versions of the deployed processes
    * @param election VanillaBP's election, which knows the id of a workflow it started
@@ -185,20 +190,20 @@ public class PeaCockpitProducer {
   @Unremovable
   public List<BusinessCockpitBpmsBridge> businessCockpitPeaBridges(
       final MigrationAdapterProperties properties,
-      final CockpitSettings settings,
       final PeaDeployedProcessesRegistry registry,
-      final PeaDeliveredUserTasks deliveredUserTasks,
+      final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaRecordedUserTasks recordedUserTasks,
       final PeaProcessVersions versions,
       final WorkflowElection election) {
 
-    final var rememberedUserTasks = PeaCockpitSettings.rememberedUserTasks(settings);
     return properties
         .adapterIdsOfType(PeaAdapter.ADAPTER_TYPE)
         .stream()
         .<BusinessCockpitBpmsBridge>map(
             adapterId -> new PeaCockpitBridge(
-                adapterId, registry, deliveredUserTasks, recordedUserTasks, versions, election, rememberedUserTasks))
+                adapterId, registry, deliveredUserTasks
+                    .of(adapterId), recordedUserTasks, versions, election, deliveredUserTasks
+                        .rememberedUserTasksOf(adapterId)))
         .toList();
 
   }

@@ -280,7 +280,7 @@ cannot be rebuilt to answer it.
 
 The same holds for a task delivered to another node, and for one which so many newer tasks have
 pushed out of the memory. Sizing the memory
-(`vanillabp.cockpit.process-engine-api.remembered-user-tasks`) does not change that. It only
+(`vanillabp.adapters.<adapter-id>.cockpit.remembered-user-tasks`) does not change that. It only
 decides how many tasks a node holds at once.
 
 **What would close it:** the single-task read entry 11 asks for. With it, the memory is a cache

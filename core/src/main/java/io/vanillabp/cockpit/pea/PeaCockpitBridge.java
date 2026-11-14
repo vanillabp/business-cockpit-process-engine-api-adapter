@@ -74,7 +74,7 @@ public class PeaCockpitBridge implements BusinessCockpitBpmsBridge {
    *
    * @param adapterId The configured adapter id this bridge serves
    * @param deployedProcesses What the adapter deployed, one record per configured adapter id
-   * @param deliveredUserTasks What this node has seen
+   * @param deliveredUserTasks What this node has seen of the engine of this adapter id
    * @param recordedUserTasks What VanillaBP wrote down about the deliveries it processed
    * @param versions What the adapter recorded about the deployed processes
    * @param election VanillaBP's election, asked only for the id it wrote down when a workflow
@@ -186,7 +186,7 @@ public class PeaCockpitBridge implements BusinessCockpitBpmsBridge {
    * <p>
    * Falling back to what this application deployed is the normal case and not an exception. That
    * is worth saying, because it reads like dead code. A node remembers a bounded number of
-   * deliveries (<code>vanillabp.cockpit.process-engine-api.remembered-user-tasks</code>). So a
+   * deliveries (<code>vanillabp.adapters.&lt;adapter-id&gt;.cockpit.remembered-user-tasks</code>). So a
    * business case whose tasks were pushed out of that memory is answered with the deployment key
    * where its reference names no version. So is a case this node never saw a task of.
    * Entry 5 in the repository's GAPS.md says what that costs.
@@ -527,9 +527,9 @@ public class PeaCockpitBridge implements BusinessCockpitBpmsBridge {
   }
 
   /**
-   * Whether a remembered task came from the engine this bridge serves. One node remembers the
-   * deliveries of every configured adapter id, and a bridge answers for its own. A task of another
-   * engine reported under this adapter id would send the cockpit to the wrong BPMS.
+   * Whether a remembered task came from the engine this bridge serves. Each adapter id has a
+   * memory of its own, so this holds already. The check stays, because a task of another engine
+   * reported under this adapter id would send the cockpit to the wrong BPMS.
    */
   private boolean servedByThisAdapter(
       final PeaDeliveredUserTasks.DeliveredUserTask task) {

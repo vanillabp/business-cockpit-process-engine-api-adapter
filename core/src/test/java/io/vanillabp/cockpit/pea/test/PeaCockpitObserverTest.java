@@ -24,6 +24,7 @@ import io.vanillabp.cockpit.extension.spi.UserTaskEventKind;
 import io.vanillabp.cockpit.extension.spi.WorkflowEventKind;
 import io.vanillabp.cockpit.pea.PeaCockpitObserver;
 import io.vanillabp.cockpit.pea.PeaDeliveredUserTasks;
+import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.integration.adapter.spi.workflowtask.BpmnTaskSpec;
 import io.vanillabp.integration.test.utils.CapturedOutput;
 import io.vanillabp.integration.test.utils.SuppressOutputExtension;
@@ -66,10 +67,11 @@ public class PeaCockpitObserverTest {
       final PeaDeployedProcessesRegistry deployedProcesses) {
 
     return new PeaCockpitObserver(
-        deployedProcesses, TestModels.claimingTheRide(), deliveredUserTasks, (
-            adapterId,
-            workflowModuleId,
-            bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
+        deployedProcesses, TestModels.claimingTheRide(), PeaDeliveredUserTasksOfEachAdapter
+            .holding(Map.of(TestModels.ADAPTER_ID, deliveredUserTasks)), (
+                adapterId,
+                workflowModuleId,
+                bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
 
   }
 
@@ -88,6 +90,46 @@ public class PeaCockpitObserverTest {
     return new PeaUserTaskObservation(
         TestModels.ADAPTER_ID, TestModels.MODULE_ID, TestModels.BPMN_PROCESS_ID, TestModels.USER_TASK_FORM, "4711", taskInformation, Map
             .of("customer", "Bond"));
+
+  }
+
+  @Test
+  @DisplayName("Two adapter ids remember their tasks apart, so one engine does not push out the tasks of the other")
+  public void twoAdapterIdsRememberTheirTasksApart() {
+
+    final var migratedTo = "pea-new";
+    final var deployedProcesses = TestModels.deployed();
+    deployedProcesses.forAdapter(migratedTo).record(TestModels.MODULE_ID, TestModels.model(),
+        TestModels.DEPLOYMENT_KEY);
+    // one task per engine, so the second task of an engine pushes out its first one
+    final var memories = new PeaDeliveredUserTasksOfEachAdapter(Map.of(TestModels.ADAPTER_ID, 1, migratedTo, 1));
+    final var observerOfTwoEngines = new PeaCockpitObserver(
+        deployedProcesses, TestModels.claimingTheRide(), memories, (
+            adapterId,
+            workflowModuleId,
+            bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
+
+    observerOfTwoEngines.userTaskDelivered(delivery("task-1", TaskInformation.CREATE, Map.of()));
+    observerOfTwoEngines.userTaskDelivered(deliveryOf(migratedTo, "task-2"));
+    observerOfTwoEngines.userTaskDelivered(deliveryOf(migratedTo, "task-3"));
+
+    assertTrue(
+        memories.of(TestModels.ADAPTER_ID).of("task-1").isPresent(),
+        "the tasks of the other engine pushed out the task of this one");
+    assertTrue(memories.of(migratedTo).of("task-2").isEmpty(), "an engine remembers more than its own key allows");
+    assertTrue(memories.of(migratedTo).of("task-3").isPresent());
+    assertTrue(memories.of(TestModels.ADAPTER_ID).of("task-3").isEmpty(), "a task is remembered for the wrong engine");
+
+  }
+
+  private static PeaUserTaskObservation deliveryOf(
+      final String adapterId,
+      final String taskId) {
+
+    final var delivery = delivery(taskId, TaskInformation.CREATE, Map.of());
+    return new PeaUserTaskObservation(
+        adapterId, delivery.workflowModuleId(), delivery.bpmnProcessId(), delivery.taskDefinition(), delivery
+            .workflowAggregateId(), delivery.taskInformation(), delivery.payload());
 
   }
 
@@ -380,10 +422,11 @@ public class PeaCockpitObserverTest {
   public void aTaskOfAProcessNobodyClaimsIsPassedOver() {
 
     final var observerOfTwoProcesses = new PeaCockpitObserver(
-        deployedWithASecondProcess("AReview"), TestModels.claimingTheRide(), deliveredUserTasks, (
-            adapterId,
-            workflowModuleId,
-            bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
+        deployedWithASecondProcess("AReview"), TestModels.claimingTheRide(), PeaDeliveredUserTasksOfEachAdapter
+            .holding(Map.of(TestModels.ADAPTER_ID, deliveredUserTasks)), (
+                adapterId,
+                workflowModuleId,
+                bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
 
     observerOfTwoProcesses.userTaskDelivered(aDeliveryOf("AReview"));
 
@@ -401,10 +444,11 @@ public class PeaCockpitObserverTest {
 
     final var observerOfTwoProcesses = new PeaCockpitObserver(
         deployedWithASecondProcess("ARideCheck"), TestModels.claiming(TestModels.BPMN_PROCESS_ID,
-            "ARideCheck"), deliveredUserTasks, (
-                adapterId,
-                workflowModuleId,
-                bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
+            "ARideCheck"), PeaDeliveredUserTasksOfEachAdapter
+                .holding(Map.of(TestModels.ADAPTER_ID, deliveredUserTasks)), (
+                    adapterId,
+                    workflowModuleId,
+                    bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels.noCallers());
 
     observerOfTwoProcesses.userTaskDelivered(aDeliveryOf("ARideCheck"));
 
@@ -438,11 +482,12 @@ public class PeaCockpitObserverTest {
     election.started("4711", "instance-of-the-ride");
     return new PeaCockpitObserver(
         deployedWithASecondProcess("ARideCheck"), TestModels.claiming(TestModels.BPMN_PROCESS_ID,
-            "ARideCheck"), deliveredUserTasks, (
-                adapterId,
-                workflowModuleId,
-                bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels
-                    .theRideCalls("ARideCheck", sharingTheAggregate, election));
+            "ARideCheck"), PeaDeliveredUserTasksOfEachAdapter
+                .holding(Map.of(TestModels.ADAPTER_ID, deliveredUserTasks)), (
+                    adapterId,
+                    workflowModuleId,
+                    bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, () -> publisher, TestModels
+                        .theRideCalls("ARideCheck", sharingTheAggregate, election));
 
   }
 

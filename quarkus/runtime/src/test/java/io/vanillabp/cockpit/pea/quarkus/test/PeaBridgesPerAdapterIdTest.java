@@ -9,8 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.vanillabp.cockpit.extension.config.CockpitSettings;
-import io.vanillabp.cockpit.pea.PeaDeliveredUserTasks;
+import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.cockpit.pea.quarkus.PeaCockpitProducer;
 import io.vanillabp.integration.adapter.migration.config.AdapterConfigProperties;
 import io.vanillabp.integration.adapter.migration.config.MigrationAdapterProperties;
@@ -36,8 +35,7 @@ public class PeaBridgesPerAdapterIdTest {
     final var deployedProcesses = new PeaDeployedProcessesRegistry();
     return new PeaCockpitProducer()
         .businessCockpitPeaBridges(
-            properties, new CockpitSettings(null, null, null, null, null, null, null, Map.of()),
-            deployedProcesses, new PeaDeliveredUserTasks(10), TestRecordedUserTasks
+            properties, deployedProcesses, new PeaDeliveredUserTasksOfEachAdapter(Map.of()), TestRecordedUserTasks
                 .knowingNothing(deployedProcesses),
             (
                 adapterId,
