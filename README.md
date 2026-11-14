@@ -69,7 +69,7 @@ the key at a workflow module, a workflow or a task, and a typo of it.
 The configuration metadata of Spring Boot has no name for "any adapter id", so no jar describes the
 key for an IDE. `EveryKeyIsKnownToTheIdeTest` holds that no jar describes it at a wrong place, and
 that each key of `PeaCockpitSettings.KEYS_READ` reaches the reading. See
-`DECISIONS.pending/1812.md`.
+decision 25 in [DECISIONS.md](DECISIONS.md).
 
 ## How the probe shaped the design
 
