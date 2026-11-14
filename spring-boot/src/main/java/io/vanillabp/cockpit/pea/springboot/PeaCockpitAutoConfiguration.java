@@ -1,22 +1,17 @@
 package io.vanillabp.cockpit.pea.springboot;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
 
-import io.vanillabp.cockpit.extension.config.CockpitSettings;
 import io.vanillabp.cockpit.extension.spi.BusinessCockpitEventPublisher;
 import io.vanillabp.cockpit.pea.PeaBusinessCases;
 import io.vanillabp.cockpit.pea.PeaCockpitObserver;
 import io.vanillabp.cockpit.pea.PeaCockpitSettings;
-import io.vanillabp.cockpit.pea.PeaDeliveredUserTasks;
+import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.cockpit.pea.PeaProcessVersions;
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
 import io.vanillabp.integration.adapter.migration.config.MigrationAdapterProperties;
@@ -24,6 +19,7 @@ import io.vanillabp.integration.adapter.migration.processservice.TaskDeliveryLog
 import io.vanillabp.integration.adapter.spi.workflowtask.WorkflowTaskWiring;
 import io.vanillabp.integration.extension.spi.election.WorkflowElection;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
+import io.vanillabp.pea.PeaAdapter;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 
 /**
@@ -40,6 +36,7 @@ import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 @AutoConfiguration(afterName = "io.vanillabp.integration.processservice.SpringBootMigrationAdapterAutoConfiguration")
 @ConditionalOnBean(MigrationAdapterProperties.class)
 @Import(PeaCockpitBeanRegistrar.class)
+@EnableConfigurationProperties(PeaCockpitOverlayProperties.class)
 public class PeaCockpitAutoConfiguration {
 
   /**
@@ -51,24 +48,27 @@ public class PeaCockpitAutoConfiguration {
   }
 
   /**
-   * The memory of what a delivered user task said, sized by the application.
+   * The memories of what a delivered user task said, one for each adapter id of this BPMS, each
+   * sized by the application.
    * <p>
-   * The configured value is read here, while the application starts, rather than when the first
-   * task arrives. A number nobody can use is then a message on the first boot.
+   * The configured values are read here, while the application starts, rather than when the
+   * first task arrives. A number nobody can use is then a message on the first boot. A value at a
+   * level where nobody reads it is refused by the cockpit's neutral half, see
+   * {@code PeaCockpitKeys}.
    *
-   * @param settings What the application wrote below the cockpit's own sections
-   * @param environment Where the keys of the application are read from, to find one which this
-   *          half reads globally and somebody wrote per workflow module. This platform ignores a
-   *          key nothing binds, so nothing else would say it
-   * @return The memory
+   * @param overlay What the application wrote below the adapter ids
+   * @param properties VanillaBP's resolved configuration, which names the adapter ids of this
+   *          BPMS
+   * @return The memories
    */
   @Bean
-  public PeaDeliveredUserTasks businessCockpitPeaDeliveredUserTasks(
-      final CockpitSettings settings,
-      final ConfigurableEnvironment environment) {
+  public PeaDeliveredUserTasksOfEachAdapter businessCockpitPeaDeliveredUserTasks(
+      final PeaCockpitOverlayProperties overlay,
+      final MigrationAdapterProperties properties) {
 
-    PeaCockpitSettings.refuseWhatAWorkflowModuleConfigured(propertyNamesOf(environment));
-    return new PeaDeliveredUserTasks(PeaCockpitSettings.rememberedUserTasks(settings));
+    return new PeaDeliveredUserTasksOfEachAdapter(
+        PeaCockpitSettings
+            .rememberedUserTasks(overlay.rememberedUserTasks(), properties.adapterIdsOfType(PeaAdapter.ADAPTER_TYPE)));
 
   }
 
@@ -115,7 +115,7 @@ public class PeaCockpitAutoConfiguration {
    *          the name of a process and the BPMN element behind a form reference come from
    * @param workflowTaskWiring VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
    *          claims a BPMN process, which is what decides whether a delivery is reported
-   * @param deliveredUserTasks The memory of what a delivery said
+   * @param deliveredUserTasks The memories of what a delivery said, one for each adapter id
    * @param versions The versions of the deployed processes
    * @param publisher Where an observed event is reported. It is resolved on the first event
    *          rather than now: this bean is built while the application is still wiring itself
@@ -128,7 +128,7 @@ public class PeaCockpitAutoConfiguration {
   public PeaCockpitObserver businessCockpitPeaUserTaskObserver(
       final PeaDeployedProcessesRegistry registry,
       final WorkflowTaskWiring workflowTaskWiring,
-      final PeaDeliveredUserTasks deliveredUserTasks,
+      final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaProcessVersions versions,
       final ObjectProvider<BusinessCockpitEventPublisher> publisher,
       final ExtensionHandlers handlers,
@@ -140,24 +140,5 @@ public class PeaCockpitAutoConfiguration {
 
   }
 
-
-  /**
-   * @param environment The application's environment
-   * @return Every property name it can enumerate
-   */
-  private static Iterable<String> propertyNamesOf(
-      final ConfigurableEnvironment environment) {
-
-    final var names = new LinkedHashSet<String>();
-    environment
-        .getPropertySources()
-        .forEach(source -> {
-          if (source instanceof final EnumerablePropertySource<?> enumerable) {
-            names.addAll(List.of(enumerable.getPropertyNames()));
-          }
-        });
-    return names;
-
-  }
 
 }

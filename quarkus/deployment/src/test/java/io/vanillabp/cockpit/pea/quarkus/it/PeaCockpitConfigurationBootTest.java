@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.test.QuarkusExtensionTest;
-import io.vanillabp.cockpit.extension.config.ConfigurationKeys;
 import io.vanillabp.cockpit.pea.PeaCockpitSettings;
 import io.vanillabp.integration.test.utils.SuppressOutputExtension;
 
@@ -25,8 +24,7 @@ public class PeaCockpitConfigurationBootTest {
   @RegisterExtension
   static final QuarkusExtensionTest extensionTest = TestApplication.forTestClass(PeaCockpitConfigurationBootTest.class)
       .overrideRuntimeConfigKey(
-          "vanillabp.cockpit.%s"
-              .formatted(PeaCockpitSettings.REMEMBERED_USER_TASKS),
+          PeaCockpitSettings.keyOf("pea", PeaCockpitSettings.REMEMBERED_USER_TASKS),
           "plenty")
       .assertException(throwable -> {
         final var messages = new StringBuilder();
@@ -39,9 +37,7 @@ public class PeaCockpitConfigurationBootTest {
             .assertTrue(
                 messages
                     .toString()
-                    .contains(
-                        ConfigurationKeys
-                            .globalKey(PeaCockpitSettings.REMEMBERED_USER_TASKS)),
+                    .contains(PeaCockpitSettings.keyOf("pea", PeaCockpitSettings.REMEMBERED_USER_TASKS)),
                 "the boot ends naming the key to fix: "
                     + messages);
       });

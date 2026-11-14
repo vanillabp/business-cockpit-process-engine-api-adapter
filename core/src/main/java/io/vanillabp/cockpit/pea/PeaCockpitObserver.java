@@ -85,7 +85,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
 
   private final WorkflowTaskWiring workflowTaskWiring;
 
-  private final PeaDeliveredUserTasks deliveredUserTasks;
+  private final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks;
 
   private final PeaProcessVersions versions;
 
@@ -100,8 +100,8 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
    * @param deployedProcesses What the adapter deployed, one record per configured adapter id
    * @param workflowTaskWiring VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
    *          of the application claims a BPMN process
-   * @param deliveredUserTasks Where a delivery is remembered, for the report built from it and
-   *          for the reads which come later
+   * @param deliveredUserTasks Where a delivery is remembered, one memory for each adapter id,
+   *          for the report built from it and for the reads which come later
    * @param versions What the adapter recorded about the deployed processes
    * @param publisher Where an observed event is handed to. It is asked for on the first event
    *          rather than up front, because this object is built while the application is still
@@ -111,7 +111,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
   public PeaCockpitObserver(
       final PeaDeployedProcessesRegistry deployedProcesses,
       final WorkflowTaskWiring workflowTaskWiring,
-      final PeaDeliveredUserTasks deliveredUserTasks,
+      final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaProcessVersions versions,
       final Supplier<BusinessCockpitEventPublisher> publisher,
       final PeaBusinessCases cases) {
@@ -198,6 +198,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
     // report inside the call below and asks the bridge what the delivery said, and the bridge has
     // nowhere else to read that from
     deliveredUserTasks
+        .of(observation.adapterId())
         .remember(
             new DeliveredUserTask(
                 reference, detailsOf(observation, process, element, shownVersionOf(
@@ -236,7 +237,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
   public void userTaskTerminated(
       final PeaUserTaskObservation observation) {
 
-    final var known = deliveredUserTasks.of(observation.taskId());
+    final var known = deliveredUserTasks.of(observation.adapterId()).of(observation.taskId());
     if (known.isEmpty()) {
       logger
           .debug(
@@ -257,7 +258,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
     // costs depends on which end this was. A completion travels in an outbox entry which comes
     // back. A cancelation is offered once and is then gone (decision 10 in the repository's
     // DECISIONS.md)
-    deliveredUserTasks.ended(observation.taskId());
+    deliveredUserTasks.of(observation.adapterId()).ended(observation.taskId());
 
   }
 
@@ -274,7 +275,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
   private void reportTheWorkflowOnceItsFirstTaskAppeared(
       final WorkflowReference workflow) {
 
-    if (deliveredUserTasks.workflowWasReported(workflow.adapterId(), workflow.workflowId())) {
+    if (deliveredUserTasks.of(workflow.adapterId()).workflowWasReported(workflow.adapterId(), workflow.workflowId())) {
       return;
     }
     publisher
@@ -285,7 +286,8 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
             EventTransaction.NEW);
     // only now. A report which did not get written leaves the case unreported, so the next user
     // task of the case makes it appear, and so does the repeated delivery of this one
-    deliveredUserTasks.rememberWorkflowWasReported(workflow.adapterId(), workflow.workflowId());
+    deliveredUserTasks.of(workflow.adapterId()).rememberWorkflowWasReported(workflow.adapterId(),
+        workflow.workflowId());
 
   }
 
@@ -355,6 +357,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
       return toldByTheEngine;
     }
     return deliveredUserTasks
+        .of(observation.adapterId())
         .of(observation.taskId())
         .map(delivered -> delivered.details().createdAt())
         .orElseGet(OffsetDateTime::now);

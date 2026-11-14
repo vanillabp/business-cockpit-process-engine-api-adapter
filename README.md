@@ -57,17 +57,19 @@ Process-Engine-API adapter it plugs into.
 [`GAPS.md`](./GAPS.md) holds the questions the cockpit asks a workflow engine which this one cannot
 answer yet. The wiki says the same in the words of somebody using the cockpit.
 
-### What the IDE knows about the key
+### Where the key stands
 
-This half has one key, `vanillabp.cockpit.process-engine-api.remembered-user-tasks`. The cockpit's
-`extensions-commons-spring-boot` binds it, and that jar's configuration metadata describes it for an
-IDE. This jar ships no metadata, so the key is described in one place only. See decision 23 in
-[`DECISIONS.md`](./DECISIONS.md).
+This half has one key, `vanillabp.adapters.<adapter-id>.cockpit.remembered-user-tasks`. It stands
+below the adapter id, because each adapter id is an engine of its own, and each engine gets a
+memory of its own (`PeaDeliveredUserTasksOfEachAdapter`). This half binds the key itself
+(`PeaCockpitOverlayProperties` on both platforms) and announces it to the cockpit's neutral half
+through `PeaCockpitKeys`, named in `META-INF/services` of the core jar. The neutral half then refuses
+the key at a workflow module, a workflow or a task, and a typo of it.
 
-The keys this half reads are the list `PeaCockpitSettings.KEYS_READ`. `EveryKeyIsKnownToTheIdeTest`
-reads the metadata of the shared jar. It fails when a key of the list is not described there, and
-when the default there differs from `DEFAULT_REMEMBERED_USER_TASKS`. So a new key, or a new
-default, needs a change to `extensions-commons` first.
+The configuration metadata of Spring Boot has no name for "any adapter id", so no jar describes the
+key for an IDE. `EveryKeyIsKnownToTheIdeTest` holds that no jar describes it at a wrong place, and
+that each key of `PeaCockpitSettings.KEYS_READ` reaches the reading. See
+decision 25 in [DECISIONS.md](DECISIONS.md).
 
 ## How the probe shaped the design
 

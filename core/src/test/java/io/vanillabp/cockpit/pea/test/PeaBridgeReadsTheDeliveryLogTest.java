@@ -22,6 +22,7 @@ import io.vanillabp.cockpit.extension.spi.WorkflowReference;
 import io.vanillabp.cockpit.pea.PeaCockpitBridge;
 import io.vanillabp.cockpit.pea.PeaCockpitObserver;
 import io.vanillabp.cockpit.pea.PeaDeliveredUserTasks;
+import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
 import io.vanillabp.integration.extension.spi.election.WorkflowStart;
 import io.vanillabp.integration.test.utils.CapturedOutput;
@@ -92,10 +93,11 @@ public class PeaBridgeReadsTheDeliveryLogTest {
 
     deliveredUserTasks = new PeaDeliveredUserTasks(10);
     observer = new PeaCockpitObserver(
-        deployedProcesses, TestModels.claimingTheRide(), deliveredUserTasks, (
-            adapterId,
-            workflowModuleId,
-            bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, RecordingPublisher::new, TestModels.noCallers());
+        deployedProcesses, TestModels.claimingTheRide(), PeaDeliveredUserTasksOfEachAdapter
+            .holding(Map.of(TestModels.ADAPTER_ID, deliveredUserTasks)), (
+                adapterId,
+                workflowModuleId,
+                bpmnProcessId) -> TestModels.DEPLOYMENT_KEY, RecordingPublisher::new, TestModels.noCallers());
     bridge = new PeaCockpitBridge(
         TestModels.ADAPTER_ID, deployedProcesses, deliveredUserTasks, recordedUserTasks, (
             adapterId,

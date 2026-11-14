@@ -1,5 +1,6 @@
 package io.vanillabp.cockpit.pea.springboot.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,9 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
-import io.vanillabp.cockpit.extension.config.ConfigurationKeys;
 import io.vanillabp.cockpit.extension.test.support.CockpitServer;
 import io.vanillabp.cockpit.pea.PeaCockpitSettings;
+import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.integration.test.utils.SuppressOutputExtension;
 
 /**
@@ -64,13 +65,13 @@ public class PeaCockpitConfigurationBootTest {
             "spring.datasource.url=jdbc:h2:mem:pea-cockpit-boot-failure",
             "vanillabp.cockpit.rest.base-url=%s".formatted(
                 CockpitServer.baseUrl()),
-            "vanillabp.cockpit.%s=plenty"
-                .formatted(PeaCockpitSettings.REMEMBERED_USER_TASKS)));
+            "%s=plenty"
+                .formatted(PeaCockpitSettings.keyOf("pea", PeaCockpitSettings.REMEMBERED_USER_TASKS))));
 
     final var messages = messagesOf(refused);
     assertTrue(
         messages
-            .contains(ConfigurationKeys.globalKey(PeaCockpitSettings.REMEMBERED_USER_TASKS)),
+            .contains(PeaCockpitSettings.keyOf("pea", PeaCockpitSettings.REMEMBERED_USER_TASKS)),
         () -> "the boot ends naming the key to fix: "
             + messages);
 
@@ -85,19 +86,55 @@ public class PeaCockpitConfigurationBootTest {
         () -> boot(
             "spring.datasource.url=jdbc:h2:mem:pea-cockpit-per-module",
             "vanillabp.cockpit.rest.base-url=%s".formatted(CockpitServer.baseUrl()),
-            "vanillabp.workflow-modules.pea-cockpit.cockpit.%s=25"
+            "vanillabp.workflow-modules.pea-cockpit.adapters.pea.cockpit.%s=25"
                 .formatted(PeaCockpitSettings.REMEMBERED_USER_TASKS)));
 
     final var messages = messagesOf(refused);
     assertTrue(
-        messages.contains("vanillabp.workflow-modules.pea-cockpit.cockpit"),
+        messages.contains("vanillabp.workflow-modules.pea-cockpit.adapters.pea.cockpit.remembered-user-tasks"),
         () -> "the boot ends naming the value which does nothing: "
             + messages);
     assertTrue(
-        messages
-            .contains(ConfigurationKeys.globalKey(PeaCockpitSettings.REMEMBERED_USER_TASKS)),
+        messages.contains(PeaCockpitSettings.keyOf("<adapter-id>", PeaCockpitSettings.REMEMBERED_USER_TASKS)),
         () -> "the boot ends naming the key to move it to: "
             + messages);
+
+  }
+
+  @Test
+  @DisplayName("The place a snapshot of version 2 read ends the boot, naming the new place")
+  public void theOldPlaceEndsTheBoot() {
+
+    final var refused = assertThrows(
+        Exception.class,
+        () -> boot(
+            "spring.datasource.url=jdbc:h2:mem:pea-cockpit-old-place",
+            "vanillabp.cockpit.rest.base-url=%s".formatted(CockpitServer.baseUrl()),
+            "vanillabp.cockpit.process-engine-api.remembered-user-tasks=25"));
+
+    final var messages = messagesOf(refused);
+    assertTrue(
+        messages.contains(PeaCockpitSettings.keyOf("<adapter-id>", PeaCockpitSettings.REMEMBERED_USER_TASKS)),
+        () -> "the boot ends naming the new place: "
+            + messages);
+
+  }
+
+  @Test
+  @DisplayName("A value at the adapter id is what the memory of that engine holds")
+  public void theValueAtTheAdapterIdSizesItsMemory() {
+
+    try (var application = new SpringApplicationBuilder(TestApplication.class)
+        .web(WebApplicationType.NONE)
+        .run(
+            "--spring.datasource.url=jdbc:h2:mem:pea-cockpit-at-the-adapter",
+            "--vanillabp.cockpit.rest.base-url=%s".formatted(CockpitServer.baseUrl()),
+            "--%s=25".formatted(PeaCockpitSettings.keyOf("pea", PeaCockpitSettings.REMEMBERED_USER_TASKS)))) {
+
+      assertEquals(
+          25, application.getBean(PeaDeliveredUserTasksOfEachAdapter.class).rememberedUserTasksOf("pea"));
+
+    }
 
   }
 
