@@ -20,7 +20,7 @@ import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 /**
  * Tests which Process-Engine-API adapter ids get a bridge.
  * <p>
- * VanillaBP gives the answer ({@code MigrationAdapterProperties#adapterIdsOfType}). A filter of
+ * VanillaBP gives the answer ({@code VanillaBpSettings#adapterIdsOfType}). A filter of
  * our own over the configured adapter TYPES misses the everyday case on this BPMS. There, an
  * application adds the single adapter dependency and configures no adapter section at all, so
  * its adapter id is the one derived from the classpath. The adapter then opened its

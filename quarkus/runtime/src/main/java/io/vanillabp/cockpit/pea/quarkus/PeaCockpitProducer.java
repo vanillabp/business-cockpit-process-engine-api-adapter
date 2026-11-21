@@ -14,11 +14,11 @@ import io.vanillabp.cockpit.pea.PeaCockpitSettings;
 import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.cockpit.pea.PeaProcessVersions;
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
-import io.vanillabp.integration.adapter.migration.config.MigrationAdapterProperties;
-import io.vanillabp.integration.adapter.migration.processservice.TaskDeliveryLogResolver;
-import io.vanillabp.integration.adapter.spi.workflowtask.WorkflowTaskWiring;
 import io.vanillabp.integration.extension.spi.election.WorkflowElection;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
+import io.vanillabp.integration.extension.spi.resolver.TaskDeliveryLogResolver;
+import io.vanillabp.integration.extension.spi.settings.VanillaBpSettings;
+import io.vanillabp.integration.spi.workflowtask.WorkflowTaskClaims;
 import io.vanillabp.pea.PeaAdapter;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -81,7 +81,7 @@ public class PeaCockpitProducer {
   @Unremovable
   public PeaDeliveredUserTasksOfEachAdapter businessCockpitPeaDeliveredUserTasks(
       final PeaCockpitOverlayProperties overlay,
-      final MigrationAdapterProperties properties) {
+      final VanillaBpSettings properties) {
 
     return new PeaDeliveredUserTasksOfEachAdapter(
         PeaCockpitSettings
@@ -134,7 +134,7 @@ public class PeaCockpitProducer {
    *
    * @param registry What the Process-Engine-API adapter recorded while deploying, which is where
    *          the name of a process and the BPMN element behind a form reference come from
-   * @param workflowTaskWiring VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
+   * @param workflowTaskClaims VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
    *          claims a BPMN process, which is what decides whether a delivery is reported
    * @param deliveredUserTasks The memories of what a delivery said, one for each adapter id
    * @param versions The versions of the deployed processes
@@ -149,7 +149,7 @@ public class PeaCockpitProducer {
   @Unremovable
   public PeaCockpitObserver businessCockpitPeaUserTaskObserver(
       final PeaDeployedProcessesRegistry registry,
-      final WorkflowTaskWiring workflowTaskWiring,
+      final WorkflowTaskClaims workflowTaskClaims,
       final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaProcessVersions versions,
       final Instance<BusinessCockpitEventPublisher> publisher,
@@ -157,8 +157,8 @@ public class PeaCockpitProducer {
       final WorkflowElection election) {
 
     return new PeaCockpitObserver(
-        registry, workflowTaskWiring, deliveredUserTasks, versions, publisher::get, new PeaBusinessCases(
-            workflowTaskWiring, handlers, election));
+        registry, workflowTaskClaims, deliveredUserTasks, versions, publisher::get, new PeaBusinessCases(
+            workflowTaskClaims, handlers, election));
 
   }
 
@@ -170,7 +170,7 @@ public class PeaCockpitProducer {
    * half collects both shapes, the same way VanillaBP's own Quarkus integration collects the
    * deployment services of a BPMS adapter.
    * <p>
-   * WHICH adapter ids those are is {@code MigrationAdapterProperties#adapterIdsOfType}, the same
+   * WHICH adapter ids those are is {@code VanillaBpSettings#adapterIdsOfType}, the same
    * answer the Spring Boot half reads through the platform's registrar support. Filtering the
    * configured types is not that answer. An id named in <code>prioritized-adapters</code> needs
    * no section of its own, and an application which configured nothing at all has the id the
@@ -189,7 +189,7 @@ public class PeaCockpitProducer {
   @Singleton
   @Unremovable
   public List<BusinessCockpitBpmsBridge> businessCockpitPeaBridges(
-      final MigrationAdapterProperties properties,
+      final VanillaBpSettings properties,
       final PeaDeployedProcessesRegistry registry,
       final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaRecordedUserTasks recordedUserTasks,

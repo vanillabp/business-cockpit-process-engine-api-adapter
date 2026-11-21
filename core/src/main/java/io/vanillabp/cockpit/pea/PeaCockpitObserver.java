@@ -16,8 +16,8 @@ import io.vanillabp.cockpit.extension.spi.UserTaskReference;
 import io.vanillabp.cockpit.extension.spi.WorkflowEventKind;
 import io.vanillabp.cockpit.extension.spi.WorkflowReference;
 import io.vanillabp.cockpit.pea.PeaDeliveredUserTasks.DeliveredUserTask;
-import io.vanillabp.integration.adapter.spi.workflowtask.BpmnTaskSpec;
-import io.vanillabp.integration.adapter.spi.workflowtask.WorkflowTaskWiring;
+import io.vanillabp.integration.spi.workflowtask.BpmnTaskElement;
+import io.vanillabp.integration.spi.workflowtask.WorkflowTaskClaims;
 import io.vanillabp.pea.deployment.PeaDeployedProcesses.DeployedProcess;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 import io.vanillabp.pea.observation.PeaUserTaskObservation;
@@ -83,7 +83,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
 
   private final PeaDeployedProcessesRegistry deployedProcesses;
 
-  private final WorkflowTaskWiring workflowTaskWiring;
+  private final WorkflowTaskClaims workflowTaskClaims;
 
   private final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks;
 
@@ -98,7 +98,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
    * which ends.
    *
    * @param deployedProcesses What the adapter deployed, one record per configured adapter id
-   * @param workflowTaskWiring VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
+   * @param workflowTaskClaims VanillaBP's answer to whether a <code>&#64;WorkflowService</code>
    *          of the application claims a BPMN process
    * @param deliveredUserTasks Where a delivery is remembered, one memory for each adapter id,
    *          for the report built from it and for the reads which come later
@@ -110,14 +110,14 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
    */
   public PeaCockpitObserver(
       final PeaDeployedProcessesRegistry deployedProcesses,
-      final WorkflowTaskWiring workflowTaskWiring,
+      final WorkflowTaskClaims workflowTaskClaims,
       final PeaDeliveredUserTasksOfEachAdapter deliveredUserTasks,
       final PeaProcessVersions versions,
       final Supplier<BusinessCockpitEventPublisher> publisher,
       final PeaBusinessCases cases) {
 
     this.deployedProcesses = Objects.requireNonNull(deployedProcesses, "deployedProcesses");
-    this.workflowTaskWiring = Objects.requireNonNull(workflowTaskWiring, "workflowTaskWiring");
+    this.workflowTaskClaims = Objects.requireNonNull(workflowTaskClaims, "workflowTaskClaims");
     this.deliveredUserTasks = Objects.requireNonNull(deliveredUserTasks, "deliveredUserTasks");
     this.versions = Objects.requireNonNull(versions, "versions");
     this.publisher = Objects.requireNonNull(publisher, "publisher");
@@ -142,7 +142,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
     }
     // a process no @WorkflowService claims is not a business case of this application, even
     // where it came with the application's own files (see decision 19)
-    if (!workflowTaskWiring.isClaimedByAWorkflowService(observation.workflowModuleId(), bpmnProcessId)) {
+    if (!workflowTaskClaims.isClaimedByAWorkflowService(observation.workflowModuleId(), bpmnProcessId)) {
       logger
           .debug(
               "Process-Engine-API[{}]: not reporting user task '{}': no @WorkflowService of workflow module '{}' claims BPMN process '{}'",
@@ -314,7 +314,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
   private UserTaskDetailsPrefill detailsOf(
       final PeaUserTaskObservation observation,
       final DeployedProcess process,
-      final BpmnTaskSpec element,
+      final BpmnTaskElement element,
       final String bpmnProcessVersion) {
 
     final var taskInformation = observation.taskInformation();
@@ -370,7 +370,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
    */
   private static String taskNameOf(
       final TaskInformation taskInformation,
-      final BpmnTaskSpec element) {
+      final BpmnTaskElement element) {
 
     final var reportedByTheEngine = PeaTaskMeta.text(taskInformation, PeaTaskMeta.TASK_NAME);
     if (reportedByTheEngine != null) {
@@ -463,7 +463,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
    * behind that is shared with the reader of the platform's delivery log, which asks the same
    * question about a task this node never saw.
    */
-  private static BpmnTaskSpec elementOf(
+  private static BpmnTaskElement elementOf(
       final DeployedProcess process,
       final PeaUserTaskObservation observation) {
 
@@ -477,7 +477,7 @@ public class PeaCockpitObserver implements PeaUserTaskObserver {
 
   private static String taskDefinitionOf(
       final PeaUserTaskObservation observation,
-      final BpmnTaskSpec element) {
+      final BpmnTaskElement element) {
 
     return element == null
         ? observation.taskDefinition()

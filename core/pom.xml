@@ -57,20 +57,6 @@
       <artifactId>vanillabp-extension-spi</artifactId>
     </dependency>
     <dependency>
-      <!-- the adapter SPI, for the name-clash avoidance an adapter is handed: this module asks
-        it what a workflow module's engine calls a process rather than cutting a prefix off a
-        string -->
-      <groupId>io.vanillabp</groupId>
-      <artifactId>vanillabp-adapter-spi</artifactId>
-    </dependency>
-    <dependency>
-      <!-- VanillaBP's resolved configuration: this module reads its own setting out of the two
-        locations the core reserves for an extension, and validates it there rather than in each
-        platform module -->
-      <groupId>io.vanillabp.adapter</groupId>
-      <artifactId>migration-adapter</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
