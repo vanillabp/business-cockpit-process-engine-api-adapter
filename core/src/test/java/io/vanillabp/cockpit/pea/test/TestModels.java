@@ -2,7 +2,6 @@ package io.vanillabp.cockpit.pea.test;
 
 import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -10,13 +9,13 @@ import java.util.Set;
 import io.vanillabp.cockpit.pea.PeaBusinessCases;
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
 import io.vanillabp.integration.adapter.spi.workflowtask.BpmnTaskSpec;
-import io.vanillabp.integration.adapter.spi.workflowtask.WorkflowTaskWiring;
 import io.vanillabp.integration.extension.spi.election.WorkflowElection;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
 import io.vanillabp.integration.extension.spi.handler.HandlerCall;
 import io.vanillabp.integration.extension.spi.handler.HandlerContract;
 import io.vanillabp.integration.extension.spi.resolver.TaskDeliveryLogResolver;
 import io.vanillabp.integration.spi.TaskDeliveryLog;
+import io.vanillabp.integration.spi.workflowtask.WorkflowTaskClaims;
 import io.vanillabp.pea.PeaBpmnModel;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 
@@ -214,21 +213,7 @@ public final class TestModels {
       final WorkflowElection election) {
 
     final var claimed = claiming(BPMN_PROCESS_ID, calledBpmnProcessId);
-    final var core = new WorkflowTaskWiring() {
-
-      @Override
-      public void validateTaskWiring(
-          final String workflowModuleId,
-          final String bpmnProcessId,
-          final Collection<BpmnTaskSpec> tasks) {
-
-      }
-
-      @Override
-      public void validateNoUnwiredWorkflowTaskMethods(
-          final String workflowModuleId) {
-
-      }
+    final var core = new WorkflowTaskClaims() {
 
       @Override
       public String resolveWorkflowAggregateIdName(
@@ -318,7 +303,7 @@ public final class TestModels {
    *
    * @return The answer
    */
-  public static WorkflowTaskWiring claimingTheRide() {
+  public static WorkflowTaskClaims claimingTheRide() {
 
     return claiming(BPMN_PROCESS_ID);
 
@@ -332,25 +317,11 @@ public final class TestModels {
    * @param claimedBpmnProcessIds The processes a workflow service claims
    * @return The answer
    */
-  public static WorkflowTaskWiring claiming(
+  public static WorkflowTaskClaims claiming(
       final String... claimedBpmnProcessIds) {
 
     final var claimed = Set.of(claimedBpmnProcessIds);
-    return new WorkflowTaskWiring() {
-
-      @Override
-      public void validateTaskWiring(
-          final String workflowModuleId,
-          final String bpmnProcessId,
-          final Collection<BpmnTaskSpec> tasks) {
-
-      }
-
-      @Override
-      public void validateNoUnwiredWorkflowTaskMethods(
-          final String workflowModuleId) {
-
-      }
+    return new WorkflowTaskClaims() {
 
       @Override
       public String resolveWorkflowAggregateIdName(

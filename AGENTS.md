@@ -41,9 +41,7 @@ What the extension reads from VanillaBP comes from the extension SPI and the int
 `WorkflowTaskClaims` for what the application claims, and `BpmnTaskElement` for the names of a user
 task. The core of VanillaBP (`migration-adapter`), the adapter SPI and the platform integrations
 are test dependencies only. An enforcer rule in the root `pom.xml` stops the build when a module
-declares one of them in another scope. One declaration is left on purpose: the core module names
-`WorkflowTaskWiring` of the adapter SPI in `PeaBusinessCases`, because `WorkflowTaskClaims` does not
-offer `workflowsShareTheWorkflowAggregate` yet. The Spring Boot module calls
+declares one of them in another scope. The Spring Boot module calls
 `AdapterBeanRegistrarSupport` of the Spring Boot integration, which the platform allows. The rule
 checks only what a module declares. The Process-Engine-API adapter brings the adapter SPI and its
 platform integration along, and that is its right as a BPMS adapter.

@@ -8,10 +8,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vanillabp.integration.adapter.spi.workflowtask.WorkflowTaskWiring;
 import io.vanillabp.integration.extension.spi.election.WorkflowElection;
 import io.vanillabp.integration.extension.spi.election.WorkflowStart;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
+import io.vanillabp.integration.spi.workflowtask.WorkflowTaskClaims;
 
 /**
  * Which business case a user task delivered by the Process-Engine-API belongs to.
@@ -25,7 +25,7 @@ import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
  * So the caller is found with two things VanillaBP knows:
  * <ul>
  * <li>Which declared processes share the task's workflow aggregate. The core answers it
- * (<code>WorkflowTaskWiring#workflowsShareTheWorkflowAggregate</code>), the same answer the Camunda
+ * (<code>WorkflowTaskClaims#workflowsShareTheWorkflowAggregate</code>), the same answer the Camunda
  * 7 and Camunda 8 adapters use for their call activities. Nothing is decided here. A process which
  * shares its aggregate with no other declared process is a case of its own.</li>
  * <li>Which instance VanillaBP started for the aggregate. That is the note of the start, read under
@@ -67,12 +67,7 @@ public class PeaBusinessCases {
                              String processVersion) {
   }
 
-  /**
-   * This is the one type of the adapter SPI the extension still names. The narrow
-   * <code>WorkflowTaskClaims</code> of the integration SPI does not offer
-   * <code>workflowsShareTheWorkflowAggregate</code> yet. Once it does, this field takes that type.
-   */
-  private final WorkflowTaskWiring workflowTaskWiring;
+  private final WorkflowTaskClaims workflowTaskClaims;
 
   private final ExtensionHandlers handlers;
 
@@ -95,16 +90,16 @@ public class PeaBusinessCases {
   /**
    * Builds the lookup on the three answers of the core it needs.
    *
-   * @param workflowTaskWiring The core, which answers which processes share a workflow aggregate
+   * @param workflowTaskClaims The core, which answers which processes share a workflow aggregate
    * @param handlers The core's list of the processes the application declares
    * @param election The core's note of the instance VanillaBP started for an aggregate
    */
   public PeaBusinessCases(
-      final WorkflowTaskWiring workflowTaskWiring,
+      final WorkflowTaskClaims workflowTaskClaims,
       final ExtensionHandlers handlers,
       final WorkflowElection election) {
 
-    this.workflowTaskWiring = Objects.requireNonNull(workflowTaskWiring, "workflowTaskWiring");
+    this.workflowTaskClaims = Objects.requireNonNull(workflowTaskClaims, "workflowTaskClaims");
     this.handlers = Objects.requireNonNull(handlers, "handlers");
     this.election = Objects.requireNonNull(election, "election");
 
@@ -162,7 +157,7 @@ public class PeaBusinessCases {
         .stream()
         .filter(other -> !other.equals(bpmnProcessId))
         .filter(
-            other -> workflowTaskWiring
+            other -> workflowTaskClaims
                 .workflowsShareTheWorkflowAggregate(workflowModuleId, other, bpmnProcessId))
         .findFirst();
     if (caller.isEmpty()) {
