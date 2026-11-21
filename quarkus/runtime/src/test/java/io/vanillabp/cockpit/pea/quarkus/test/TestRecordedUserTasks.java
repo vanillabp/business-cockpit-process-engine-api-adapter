@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
-import io.vanillabp.integration.adapter.migration.processservice.TaskDeliveryLogResolver;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
 import io.vanillabp.integration.extension.spi.handler.HandlerCall;
 import io.vanillabp.integration.extension.spi.handler.HandlerContract;
+import io.vanillabp.integration.extension.spi.resolver.TaskDeliveryLogResolver;
 import io.vanillabp.integration.spi.TaskDeliveryLog;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 

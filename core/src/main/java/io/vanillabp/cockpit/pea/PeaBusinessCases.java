@@ -67,6 +67,11 @@ public class PeaBusinessCases {
                              String processVersion) {
   }
 
+  /**
+   * This is the one type of the adapter SPI the extension still names. The narrow
+   * <code>WorkflowTaskClaims</code> of the integration SPI does not offer
+   * <code>workflowsShareTheWorkflowAggregate</code> yet. Once it does, this field takes that type.
+   */
   private final WorkflowTaskWiring workflowTaskWiring;
 
   private final ExtensionHandlers handlers;

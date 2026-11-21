@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import io.vanillabp.integration.adapter.migration.config.MigrationAdapterProperties;
+import io.vanillabp.integration.extension.spi.settings.VanillaBpSettings;
 
 /**
  * The key this half reads itself, as an OVERLAY of the shared <code>vanillabp.*</code>
@@ -22,7 +22,7 @@ import io.vanillabp.integration.adapter.migration.config.MigrationAdapterPropert
  * It is bound as text and read by {@code PeaCockpitSettings} in the core, so a value which is no
  * number gets the same message here and on Quarkus.
  */
-@ConfigurationProperties(MigrationAdapterProperties.PREFIX)
+@ConfigurationProperties(VanillaBpSettings.PREFIX)
 public class PeaCockpitOverlayProperties {
 
   /** The sections of the adapter ids, by adapter id. */

@@ -36,6 +36,18 @@ adapter and an extension run in, and the order they run in, is described once fo
 [`ADAPTER-AUTHORS.md`](https://github.com/vanillabp/adapter-platform-integration/blob/main/migration-adapter/ADAPTER-AUTHORS.md)
 of the platform repository.
 
+What the extension reads from VanillaBP comes from the extension SPI and the integration SPI:
+`VanillaBpSettings` for the configured adapters, `TaskDeliveryLogResolver` for the delivery log,
+`WorkflowTaskClaims` for what the application claims, and `BpmnTaskElement` for the names of a user
+task. The core of VanillaBP (`migration-adapter`), the adapter SPI and the platform integrations
+are test dependencies only. An enforcer rule in the root `pom.xml` stops the build when a module
+declares one of them in another scope. One declaration is left on purpose: the core module names
+`WorkflowTaskWiring` of the adapter SPI in `PeaBusinessCases`, because `WorkflowTaskClaims` does not
+offer `workflowsShareTheWorkflowAggregate` yet. The Spring Boot module calls
+`AdapterBeanRegistrarSupport` of the Spring Boot integration, which the platform allows. The rule
+checks only what a module declares. The Process-Engine-API adapter brings the adapter SPI and its
+platform integration along, and that is its right as a BPMS adapter.
+
 What this extension does with the pipeline belongs to the Business Cockpit, and the cockpit's own
 repository is [vanillabp/business-cockpit](https://github.com/vanillabp/business-cockpit). The
 platform-neutral half of the extension lives there as `extensions-commons` and is consumed here as

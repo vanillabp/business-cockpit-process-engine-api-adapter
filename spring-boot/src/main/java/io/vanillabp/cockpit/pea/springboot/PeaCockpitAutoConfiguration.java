@@ -14,11 +14,11 @@ import io.vanillabp.cockpit.pea.PeaCockpitSettings;
 import io.vanillabp.cockpit.pea.PeaDeliveredUserTasksOfEachAdapter;
 import io.vanillabp.cockpit.pea.PeaProcessVersions;
 import io.vanillabp.cockpit.pea.PeaRecordedUserTasks;
-import io.vanillabp.integration.adapter.migration.config.MigrationAdapterProperties;
-import io.vanillabp.integration.adapter.migration.processservice.TaskDeliveryLogResolver;
 import io.vanillabp.integration.adapter.spi.workflowtask.WorkflowTaskWiring;
 import io.vanillabp.integration.extension.spi.election.WorkflowElection;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
+import io.vanillabp.integration.extension.spi.resolver.TaskDeliveryLogResolver;
+import io.vanillabp.integration.extension.spi.settings.VanillaBpSettings;
 import io.vanillabp.pea.PeaAdapter;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 
@@ -34,7 +34,7 @@ import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
  * extension does not compile against a platform integration.
  */
 @AutoConfiguration(afterName = "io.vanillabp.integration.processservice.SpringBootMigrationAdapterAutoConfiguration")
-@ConditionalOnBean(MigrationAdapterProperties.class)
+@ConditionalOnBean(VanillaBpSettings.class)
 @Import(PeaCockpitBeanRegistrar.class)
 @EnableConfigurationProperties(PeaCockpitOverlayProperties.class)
 public class PeaCockpitAutoConfiguration {
@@ -64,7 +64,7 @@ public class PeaCockpitAutoConfiguration {
   @Bean
   public PeaDeliveredUserTasksOfEachAdapter businessCockpitPeaDeliveredUserTasks(
       final PeaCockpitOverlayProperties overlay,
-      final MigrationAdapterProperties properties) {
+      final VanillaBpSettings properties) {
 
     return new PeaDeliveredUserTasksOfEachAdapter(
         PeaCockpitSettings
