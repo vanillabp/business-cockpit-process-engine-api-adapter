@@ -45,20 +45,6 @@
       <artifactId>process-engine-api-adapter-spring-boot</artifactId>
     </dependency>
     <dependency>
-      <!-- VanillaBP's resolved configuration, which is where this module reads the configured
-        adapter ids from; it arrives transitively as well, and is declared because the
-        auto-configuration and the bean registrar compile against it -->
-      <groupId>io.vanillabp.adapter</groupId>
-      <artifactId>migration-adapter</artifactId>
-    </dependency>
-    <dependency>
-      <!-- the adapter SPI, for the name-clash avoidance this module hands the observer: it
-        arrives transitively as well, and is declared because the auto-configuration compiles
-        against it -->
-      <groupId>io.vanillabp</groupId>
-      <artifactId>vanillabp-adapter-spi</artifactId>
-    </dependency>
-    <dependency>
       <!-- VanillaBP's answer to which workflow aggregate serves a BPMN process: it arrives
         transitively as well, and is declared because the auto-configuration asks it before it
         resolves the delivery log of that aggregate -->

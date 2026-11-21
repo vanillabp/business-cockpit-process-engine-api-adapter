@@ -5,11 +5,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.vanillabp.cockpit.extension.spi.UserTaskReference;
-import io.vanillabp.integration.adapter.migration.processservice.TaskDeliveryLogResolver;
-import io.vanillabp.integration.adapter.spi.workflowtask.BpmnTaskSpec;
 import io.vanillabp.integration.extension.spi.handler.ExtensionHandlers;
+import io.vanillabp.integration.extension.spi.resolver.TaskDeliveryLogResolver;
 import io.vanillabp.integration.spi.TaskDelivery;
 import io.vanillabp.integration.spi.TaskDeliveryLog;
+import io.vanillabp.integration.spi.workflowtask.BpmnTaskElement;
 import io.vanillabp.pea.deployment.PeaDeployedProcessesRegistry;
 
 /**
@@ -198,7 +198,7 @@ public class PeaRecordedUserTasks {
   }
 
   private static String elementIdOf(
-      final BpmnTaskSpec element) {
+      final BpmnTaskElement element) {
 
     return element == null
         ? null

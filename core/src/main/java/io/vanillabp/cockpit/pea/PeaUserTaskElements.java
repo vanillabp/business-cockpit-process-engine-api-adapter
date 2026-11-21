@@ -1,6 +1,6 @@
 package io.vanillabp.cockpit.pea;
 
-import io.vanillabp.integration.adapter.spi.workflowtask.BpmnTaskSpec;
+import io.vanillabp.integration.spi.workflowtask.BpmnTaskElement;
 import io.vanillabp.pea.deployment.PeaDeployedProcesses.DeployedProcess;
 
 /**
@@ -32,7 +32,7 @@ final class PeaUserTaskElements {
    * @return The element, or <code>null</code> where the deployed process carries no user task
    *         either source names
    */
-  static BpmnTaskSpec elementOf(
+  static BpmnTaskElement elementOf(
       final DeployedProcess process,
       final String bpmnElementId,
       final String taskDefinition) {
