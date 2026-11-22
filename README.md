@@ -185,7 +185,7 @@ two runs which publish at the same time would overwrite each other. `release.yam
 hand and publishes to Maven Central from a release branch. It deploys no snapshot, so it can run
 beside a publish.
 
-`nightly-build.yaml` runs `build.yaml` on `main` once a night, with `--update-snapshots`. So a
+`nightly-build.yaml` runs `build.yaml` on `main` once a night, with the newest snapshots. So a
 `main` which a new snapshot of the platform or of the cockpit breaks is seen, even when nobody
 pushed here. It publishes nothing. It waits for a publish which is running or waiting. Then it joins
 the group of that publish, so it never takes the place of a waiting publish. A red night becomes one
