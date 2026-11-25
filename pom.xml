@@ -13,7 +13,7 @@
 
   <groupId>io.vanillabp.businesscockpit</groupId>
   <artifactId>businesscockpit-process-engine-api-adapter-parent</artifactId>
-  <version>0.9.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>VanillaBP Business Cockpit adapter for the Process-Engine-API</name>
   <description>Business Cockpit integration for the bpm-crafters Process-Engine-API, built as a VanillaBP 2 extension.</description>
@@ -50,7 +50,7 @@
     <process-engine-api.version>1.7</process-engine-api.version>
     <!-- the Business Cockpit itself: extensions-commons is the platform-neutral half of
          this extension and is consumed as a published artifact, never copied -->
-    <business-cockpit.version>0.9.0-SNAPSHOT</business-cockpit.version>
+    <business-cockpit.version>1.0.0-SNAPSHOT</business-cockpit.version>
     <spring-boot.version>4.1.3</spring-boot.version>
     <quarkus.version>3.40.1.2</quarkus.version>
     <!-- where the build stops, the same number in every VanillaBP repository -->
